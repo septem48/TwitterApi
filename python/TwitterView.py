@@ -4,44 +4,31 @@ import emoji, csv, datetime, pytz, time
 
 def main():
 
-    res = TwitterDocument.japanesePopularSearch(cnt=2)
+    res = TwitterDocument.japanesePopularSearch(cnt=40)
 
     # リツイート数順でソート
     res.sort(key=lambda x: x['retweet_count'], reverse=True)
-
-    # for line in res:
-    #     print(line['user']['name']+'::'+line['full_text'])
-    #     print(line['created_at'])
-    #     print(line['retweet_count'])
-    #
-    #     print('*' * 100)
 
     outPutAsCsv(res)
 
 
 def outPutAsCsv(dicts):
+    rawWriteList = []
+    trsWriteList = []
 
-    header = ['UserName', 'TweetContent', 'RetweetCount', 'LikeCount',
-              'FollowerCount', 'TweetedCount', 'CharCount', 'EmojisCount',
-              'BrsCount', 'MediaTypes', 'MediaCount', 'MediaUrls',
-              'HashtagContents', 'HashtagCount', 'Time']
+    rawHeader = ['UserName', 'TweetContent', 'RetweetCount', 'LikeCount',
+                 'FollowerCount', 'TweetedCount', 'CharCount', 'EmojiCount',
+                 'BrsCount', 'MediaType', 'MediaCount', 'MediaUrl',
+                 'HashtagContents', 'HashtagCount', 'Time']
 
-    body = makeBody(dicts)
-
-    writeList = []
-
-    writeList.append(header)
-
-    for line in body:
-        writeList.append(line)
-
-    CsvView.writeCsv(writeList, 'RawData')
+    trsHeader = ['RetweetCount', 'LikeCount',
+                 'FollowerCount', 'TweetedCount', 'CharCount', 'EmojiCount',
+                 'BrsCount', 'MediaType', 'MediaCount',
+                 'HashtagCount', 'Hour']
 
 
-
-def makeBody(dicts):
-
-    body = []
+    rawWriteList.append(rawHeader)
+    trsWriteList.append(trsHeader)
 
     for line in dicts:
         userName = getUserName(line)
@@ -61,21 +48,39 @@ def makeBody(dicts):
         mediaTypes = getMediaType(line)
         mediaCount = len(mediaTypes)
 
-        mediaUrls = getMediaUrls(line)
+        if len(mediaTypes) != 0:
+            mediaType = mediaTypes[0]
+        else:
+            mediaType = ""
+
+        mediaUrls = getMediaUrl(line)
+        if len(mediaUrls) != 0:
+            mediaUrl = mediaUrls[0]
+        else:
+            mediaUrl = ""
 
         hashtagContents = getHashtagContent(line)
         hashtagsCount = len(hashtagContents)
 
-        time = getJapanTime(line)
+        jptime = getJapanTime(line)
+        hour = getHour(jptime)
 
-        elem = [userName, tweetContent, retweetCount, likeCount,
-                followerCount, tweetedCount, charCount, emojiCount,
-                brsCount, mediaTypes, mediaCount, mediaUrls,
-                hashtagContents, hashtagsCount, time]
+        rawelem = [userName, tweetContent, retweetCount, likeCount,
+                   followerCount, tweetedCount, charCount, emojiCount,
+                   brsCount, mediaType, mediaCount, mediaUrl,
+                   hashtagContents, hashtagsCount, jptime]
 
-        body.append(elem)
+        rawWriteList.append(rawelem)
 
-    return body
+        trselem = [retweetCount, likeCount,
+                   followerCount, tweetedCount, charCount, emojiCount,
+                   brsCount, mediaType, mediaCount,
+                   hashtagsCount, hour]
+
+        trsWriteList.append(trselem)
+
+    CsvView.writeCsv(rawWriteList, "Raw")
+    CsvView.writeCsv(trsWriteList, "Transaction")
 
 
 def getUserName(dic):
@@ -153,7 +158,7 @@ def getMediaType(dic):
     return mediaTypes
 
 
-def getMediaUrls(dic):
+def getMediaUrl(dic):
 
     urls = []
 
@@ -162,6 +167,7 @@ def getMediaUrls(dic):
             urls.append(media['media_url_https'])
 
     return urls
+
 
 
 def getHashtagContent(dic):
@@ -190,6 +196,11 @@ def getJapanTime(dic):
     jst_time = utc_time.astimezone(pytz.timezone("Asia/Tokyo"))  # 日本時間に変換
     str_time = jst_time.strftime("%Y-%m-%d_%H%M%S")  # 文字列で返す
     return str_time
+
+
+def getHour(str):
+    st = time.strptime(str, '%Y-%m-%d_%H%M%S')
+    return st.tm_hour
 
 
 main()
