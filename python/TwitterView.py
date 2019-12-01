@@ -13,20 +13,23 @@ def main():
 
 
 def outPutAsCsv(dicts):
-    CsvView.writeCsv(makeRaw(dicts), 'RawData')
-    CsvView.writeCsv(makeTransaction(dicts), 'TransactionData')
+    rawWriteList = []
+    trsWriteList = []
+
+    rawHeader = ['UserName', 'TweetContent', 'RetweetCount', 'LikeCount',
+                 'FollowerCount', 'TweetedCount', 'CharCount', 'EmojiCount',
+                 'BrsCount', 'MediaType', 'MediaCount', 'MediaUrl',
+                 'HashtagContents', 'HashtagCount', 'Time']
+
+    trsHeader = ['RetweetCount', 'LikeCount',
+                 'FollowerCount', 'TweetedCount', 'CharCount', 'EmojiCount',
+                 'BrsCount', 'MediaType', 'MediaCount',
+                 'HashtagCount', 'Hour']
 
 
-def makeRaw(dicts):
-    writeList = []
-    header = ['UserName', 'TweetContent', 'RetweetCount', 'LikeCount',
-              'FollowerCount', 'TweetedCount', 'CharCount', 'EmojiCount',
-              'BrsCount', 'MediaType', 'MediaCount', 'MediaUrl',
-              'HashtagContents', 'HashtagCount', 'Time']
+    rawWriteList.append(rawHeader)
+    trsWriteList.append(trsHeader)
 
-    writeList.append(header)
-
-    body = []
     for line in dicts:
         userName = getUserName(line)
         tweetContent = line['full_text']
@@ -42,76 +45,42 @@ def makeRaw(dicts):
         emojiCount = getEmojiCount(tweetContent)
         brsCount = getBrCount(tweetContent)
 
-        mediaType = getMediaType(line)
-        mediaCount = len(mediaType)
+        mediaTypes = getMediaType(line)
+        mediaCount = len(mediaTypes)
+
+        if len(mediaTypes) != 0:
+            mediaType = mediaTypes[0]
+        else:
+            mediaType = ""
 
         mediaUrls = getMediaUrl(line)
+        if len(mediaUrls) != 0:
+            mediaUrl = mediaUrls[0]
+        else:
+            mediaUrl = ""
 
         hashtagContents = getHashtagContent(line)
         hashtagsCount = len(hashtagContents)
 
-        time = getJapanTime(line)
+        jptime = getJapanTime(line)
+        hour = getHour(jptime)
 
-        elem = [userName, tweetContent, retweetCount, likeCount,
-                followerCount, tweetedCount, charCount, emojiCount,
-                brsCount, mediaType, mediaCount, mediaUrls,
-                hashtagContents, hashtagsCount, time]
+        rawelem = [userName, tweetContent, retweetCount, likeCount,
+                   followerCount, tweetedCount, charCount, emojiCount,
+                   brsCount, mediaType, mediaCount, mediaUrl,
+                   hashtagContents, hashtagsCount, jptime]
 
-        body.append(elem)
+        rawWriteList.append(rawelem)
 
-    for line in body:
-        writeList.append(line)
+        trselem = [retweetCount, likeCount,
+                   followerCount, tweetedCount, charCount, emojiCount,
+                   brsCount, mediaType, mediaCount,
+                   hashtagsCount, hour]
 
-    return writeList
+        trsWriteList.append(trselem)
 
-
-def makeTransaction(dicts):
-    writeList = []
-    header = ['RetweetCount', 'LikeCount',
-              'FollowerCount', 'TweetedCount', 'CharCount', 'EmojiCount',
-              'BrsCount', 'MediaType', 'MediaCount',
-              'HashtagCount', 'Hour']
-
-    writeList.append(header)
-
-    body = []
-    for line in dicts:
-        userName = getUserName(line)
-        tweetContent = line['full_text']
-
-        retweetCount = getRetweetCount(line)
-        likeCount = getLikeCount(line)
-
-        followerCount = getFollowerCount(line)
-        tweetedCount = getTweetedCount(line)
-
-        charCount = makeCharCount(line)
-
-        emojiCount = getEmojiCount(tweetContent)
-        brsCount = getBrCount(tweetContent)
-
-        mediaType = getMediaType(line)
-        mediaCount = len(mediaType)
-
-        mediaUrls = getMediaUrl(line)
-
-        hashtagContents = getHashtagContent(line)
-        hashtagsCount = len(hashtagContents)
-
-        time = getJapanTime(line)
-        hour = getHour(time)
-
-        elem = [retweetCount, likeCount,
-                followerCount, tweetedCount, charCount, emojiCount,
-                brsCount, mediaType, mediaCount,
-                hashtagsCount, time]
-
-        body.append(elem)
-
-    for line in body:
-        writeList.append(line)
-
-    return writeList
+    CsvView.writeCsv(rawWriteList, "Raw")
+    CsvView.writeCsv(trsWriteList, "Transaction")
 
 
 def getUserName(dic):
@@ -185,9 +154,8 @@ def getMediaType(dic):
     if 'media' in dic['entities']:
         for media in dic['extended_entities']['media']:
             mediaTypes.append(media['type'])
-        return mediaTypes[0]
-    else:
-        return ''
+
+    return mediaTypes
 
 
 def getMediaUrl(dic):
@@ -197,9 +165,9 @@ def getMediaUrl(dic):
     if 'media' in dic['entities']:
         for media in dic['entities']['media']:
             urls.append(media['media_url_https'])
-        return urls[0]
-    else:
-        return ''
+
+    return urls
+
 
 
 def getHashtagContent(dic):
