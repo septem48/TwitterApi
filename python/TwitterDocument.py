@@ -19,3 +19,14 @@ def getMyTweet(cnt):
     cnt = cnt
     res = TwitterConnection.getMyTweet(cnt)
     return res
+
+
+def userPopularSearch(cnt, userName):
+
+    # パラメータ設定
+    # lang:ja で日本のツイートが取得できる
+
+    cnt = cnt
+
+    res = TwitterConnection.getUserTweet(cnt, userName)
+    return res

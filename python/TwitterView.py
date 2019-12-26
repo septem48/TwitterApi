@@ -4,7 +4,8 @@ import emoji, csv, datetime, pytz, time
 
 def main():
 
-    res = TwitterDocument.japanesePopularSearch(cnt=40)
+    # res = TwitterDocument.japanesePopularSearch(cnt=40)
+    res = TwitterDocument.userPopularSearch(cnt=10000, userName='igarashi_yukari')
 
     # リツイート数順でソート
     res.sort(key=lambda x: x['retweet_count'], reverse=True)

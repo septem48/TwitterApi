@@ -46,6 +46,24 @@ def getMyTweet(cnt):
         return 0
 
 
+def getUserTweet(cnt, userName):
+    twitter = oauth()
+    url = "https://api.twitter.com/1.1/statuses/user_timeline.json?tweet_mode=extended"
+    params = {'count': cnt,
+              'exclude_replies': 'true',
+              'screen_name': userName,
+              'include_rts': 'false'}
+    req = twitter.get(url, params=params)
+
+    if req.status_code == 200:
+        timelines = json.loads(req.text)
+        return timelines
+
+    else:
+        print("ERROR: %d" % req.status_code)
+        return 0
+
+
 def retweet(tid):
     twitter = oauth()
 
